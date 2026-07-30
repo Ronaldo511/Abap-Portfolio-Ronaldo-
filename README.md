@@ -1,72 +1,67 @@
-# 🚚 Sistema de Gestão e Escalonamento de Frota Logística (ABAP OO)
+# 🚚 Sistema de Gestão, Precificação e Reserva de Frota (ABAP)
 
 ![SAP S/4HANA](https://img.shields.io/badge/SAP-S%2F4HANA-blue)
 ![ABAP 7.40+](https://img.shields.io/badge/ABAP-7.40%2B-orange)
-![Paradigma](https://img.shields.io/badge/Paradigma-Orientado%20a%20Objetos-green)
+![Banco de Dados Z](https://img.shields.io/badge/Persist%C3%AAncia-Tabela%20Z-green)
 
 ## 📌 Visão Geral do Projeto
 
-Este projeto consiste em uma solução ABAP desenvolvida para otimizar o planejamento operacional de frotas no setor logístico. O programa realiza o **escalonamento dinâmico de reservas de veículos** dentro de uma janela de tempo definida pelo usuário, aplicando regras de negócio para depreciação de ativos e exibição dos resultados em um relatório interativo (**ALV Grid**).
+Este projeto consiste em um programa executável (*Report*) desenvolvido em ABAP para simular a gestão, filtragem e reserva de veículos em uma frota logística. 
 
-O grande diferencial da solução é a integração entre a **regra de negócio operacional (chão de fábrica e logística)** e uma **arquitetura de código limpa e moderna (ABAP 7.40+)**.
+A solução integra a **persistência de dados em tabela transparente (`ZRESERVAS_DB_V3`)**, a interatividade na tela de seleção com geração de dados de teste via botão customizado e o processamento de regras de negócio avançadas, incluindo **distribuição de janelas operacionais de 20%** e **depreciação de ativos**.
+
+---
+
+## 📷 Demonstração do Sistema
+
+![Demonstração da Execução do Report](https://github.com/user-attachments/assets/7d87ab6b-e7bd-46b3-bed4-71108dd1d2a0)
 
 ---
 
 ## ⚙️ Funcionalidades Principais
 
-- **Escalonamento Proporcional de Janelas:** Distribuição automática da frota em blocos de tempo baseados na amplitude do período informado.
-- **Depreciação Financeira Dinâmica:** Cálculo progressivo de desvalorização dos veículos com base no ano de fabricação (taxa composta de 10% a.a.).
-- **Interface Orientada a Objetos (ABAP OO):** Encapsulamento de lógica de negócio em classes locais (`LCL_FROTA`), garantindo fácil manutenção e escalabilidade.
-- **Relatório ALV Interativo:** Apresentação dos dados processados via `CL_SALV_TABLE` com formatação personalizada de colunas.
+- **Persistência em Banco de Dados (Tabela Z):** Gravação e manipulação de registros de reservas diretamente na tabela transparente `ZRESERVAS_DB_V3`.
+- **Geração Dinâmica de Massa de Teste:** Botão de ação na `SELECTION-SCREEN` (`USER-COMMAND 'GERA'`) para inserção automática de dados de teste via `INSERT` e `COMMIT WORK`.
+- **Filtro de Usabilidade e Valores:** Parâmetros `P_V_MIN` e `P_V_MAX` para validação e restrição de faixas de preço aceitáveis na locação.
+- **Escalonamento Proporcional (Janela de 20%):** Algoritmo que calcula o intervalo entre a data inicial e final (`S_DATA`) e distribui os veículos proporcionalmente ao longo do tempo.
+- **Precificação e Depreciação de Ativos:** Aplicação de efeito cascata na valoração dos veículos com base no ano de fabricação.
+- **Relatório Formatado e Tratamento de Exceções:** Saída visual estruturada com molduras e feedback visual (`FORMAT COLOR COL_NEGATIVE`) em cenários de busca sem resultados.
 
 ---
 
-## 🏗️ Arquitetura e Lógica de Negócio
+## 🏗️ Estrutura e Componentes da Solução
 
-### 1. Escalonamento da Frota
-Dada uma janela total de dias ($D$), o algoritmo calcula o intervalo individual ($J$) por veículo proporcionalmente:
-
-$$J = \frac{\text{Data Fim} - \text{Data Início}}{\text{Total de Veículos}}$$
-
-A data de reserva de cada veículo é atribuída sequencialmente com base na sua posição no fluxo operacional.
-
-### 2. Cálculo de Depreciação
-A depreciação é calculada dinamicamente utilizando a idade do veículo ($I = \text{Ano Atual} - \text{Ano do Veículo}$):
-
-$$\text{Valor Final} = \text{Valor Base} \times (0.90)^I$$
+| Componente | Tipo | Descrição |
+| :--- | :--- | :--- |
+| `zreservas_db_v3` | Tabela Transparente | Estrutura de banco de dados para armazenamento do histórico de reservas. |
+| `P_NOME` | Parameter | Nome do cliente impresso no relatório final (`LOWER CASE`). |
+| `P_V_MIN` / `P_V_MAX` | Parameters | Faixa mínima e máxima de valor para filtragem dos modelos da frota. |
+| `S_DATA` | Select-Options | Intervalo de datas utilizado para calcular as janelas de reserva de 20%. |
+| `BTN_GERA` | Pushbutton | Botão interativo acionado pelo evento `AT SELECTION-SCREEN`. |
 
 ---
 
 ## 💻 Recursos Técnicos & Sintaxes Utilizadas
 
-- **ABAP 7.40+:** Construtores de valor `VALUE #()`, declarações em linha `DATA(...)`, e instanciação simplificada `NEW`.
-- **Orientação a Objetos:** Separação clara entre camada de apresentação, seleção de dados e processamento de regras de negócio.
-- **ALV Object Model:** Utilização da classe padrão `CL_SALV_TABLE` para exibição de dados com tratamento de exceções (`CX_SALV_MSG`).
+- **Sintaxes Modernas (7.40+):** Construtor de tabelas internas `VALUE #()`, *String Templates* `|{ ... }|` e declarações em linha `DATA(...)`.
+- **Eventos de Relatório:** Uso estratégico de `INITIALIZATION`, `AT SELECTION-SCREEN` e `START-OF-SELECTION`.
+- **Formatação de Saída:** Uso de comandos `WRITE` avançados com formatação de linhas (`SY-VLINE`), moeda (`CURRENCY 'BRL'`) e mensagens de status (`MESSAGE ... TYPE 'S'`).
 
 ---
 
-## 📁 Estrutura do Código
+## 🚀 Como Executar no Ambiente SAP
 
-| Componente | Tipo | Descrição |
-| :--- | :--- | :--- |
-| `lcl_frota` | Class (Def/Imp) | Lógica principal de processamento de frota e depreciação. |
-| `p_datini` / `p_datfim` | Selection Parameters | Parâmetros de entrada de intervalo de datas na tela de seleção. |
-| `mt_veiculos` | Internal Table | Tabela interna estruturada para manipulação dos dados em memória. |
-
----
-
-## 🚀 Como Executar o Código no Ambiente SAP
-
-1. Acesse a transação **SE38** ou **SE80** em seu ambiente SAP / SAP GUI (ou ADT no Eclipse).
-2. Crie um programa executável do tipo *Report* com o nome `ZR_GESTAO_FROTA_LOGISTICA`.
-3. Cole o código do arquivo `zr_gestao_frota_logistica.abap` contido neste repositório.
-4. Ative o programa (`Ctrl + F3`) e execute (`F8`).
-5. Informe o período desejado na tela de seleção e visualize a tabela ALV gerada.
+1. Certifique-se de que a tabela transparente `ZRESERVAS_DB_V3` esteja ativa no Dictionary (**SE11**).
+2. Acesse a transação **SE38** ou **SE80** (ou ADT no Eclipse).
+3. Crie o programa executável `Z_EXIBE_RESERVAS_V3`.
+4. Cole o código-fonte presente em `src/Z_EXIBE_RESERVAS_V3.abap`.
+5. Ative (`Ctrl + F3`) e execute (`F8`).
+6. *(Opcional)* Clique no botão **"GERA DADOS DE TEXTO"** na tela inicial para popular a massa de dados inicial no banco.
 
 ---
 
 ## 👨‍💻 Autor
 
-**Ronaldo**  
+**Ronaldo Silva**  
 *Desenvolvedor ABAP em transição de carreira | Especialista em Operações Logísticas*  
-- LinkedIn: [Seu Perfil do LinkedIn](Https://www.linkedin.com/in/ronaldo-silva-dev-erp-abap-ccharp)
+- **LinkedIn:** [ronaldo-silva-550151322](https://www.linkedin.com/in/ronaldo-silva-550151322)
