@@ -18,6 +18,10 @@ A solução integra a **persistência de dados em tabela transparente (`ZRESERVA
 
 ---
 
+https://github.com/user-attachments/assets/c45c5afb-6a53-4639-8589-7fde9a0763bc
+
+
+
 ## ⚙️ Funcionalidades Principais
 
 - **Persistência em Banco de Dados (Tabela Z):** Gravação e manipulação de registros de reservas diretamente na tabela transparente `ZRESERVAS_DB_V3`.
